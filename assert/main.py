@@ -37,7 +37,7 @@ ex.observers.append(FileStorageObserver.create('snapshots'))
 def my_config():
     model_params = {
         'MODEL_SELECT': 6,  # which model
-        'NUM_SPOOF_CLASS': 2,  # 7 or 10 x-class classification
+        'NUM_SPOOF_CLASS': 2,  # LA: 7 or PA: 10 x-class classification
         'FOCAL_GAMMA': None,  # gamma parameter for focal loss; if obj is not focal loss, set this to None
         'NUM_RESNET_BLOCK': 5,  # number of resnet blocks in ResNet
         'AFN_UPSAMPLE': 'Bilinear',  # upsampling method in AFNet: Conv or Bilinear
@@ -53,10 +53,11 @@ def my_config():
     data_files = {  # training
         'train_scp': 'data_reader/feats/la_train_spec_tensor4.scp',
         'train_utt2index': 'data_reader/utt2systemID/la_train_utt2index_8',
-        'dev_scp': 'data_reader/feats/la_dev_spec_tensor4.scp',
-        'dev_utt2index': 'data_reader/utt2systemID/la_dev_utt2index_8',
-        'dev_utt2systemID': 'data_reader/utt2systemID/la_dev_utt2systemID',
-        'scoring_dir': 'scoring/la_cm_scores/',
+        'dev_scp': '/home/vano/wrkdir/projects_data/antispoofing_speech/logspec/raw_fbank_ASVspoof2019_PA_dev_spec.1.scp',
+        'dev_utt2index': 'data_reader/utt2systemID/pa_dev_utt2index_8',
+        'dev_utt2systemID': 'data_reader/utt2systemID/pa_dev_utt2systemID',
+        'eval_utt2systemID': 'data_reader/utt2systemID/pa_eval_utt2systemID',
+        'scoring_dir': 'scoring/pa_cm_scores/',
     }
 
     leave_one_out = False  # leave one out during train and val
@@ -305,7 +306,7 @@ def forward_pass(_run, pretrained_model_id, test_batch_size, data_files, model_p
 
     if pretrained_model_id:
         # pretrain_pth = 'snapshots/' + str(pretrained_model_id) + '/model_best.pth.tar'
-        pretrain_pth = '../pretrained/la/senet34'
+        pretrain_pth = '../pretrained/pa/senet34'
         if os.path.isfile(pretrain_pth):
             print("===> loading checkpoint '{}'".format(pretrain_pth))
             checkpoint = torch.load(pretrain_pth, map_location=lambda storage, loc: storage)  # load for cpu
@@ -320,14 +321,15 @@ def forward_pass(_run, pretrained_model_id, test_batch_size, data_files, model_p
             print("===> no checkpoint found at '{}'".format(pretrain_pth))
             exit()
 
-            # Data loading code (class analysis for multi-class classification only)
+    # Data loading code (class analysis for multi-class classification only)
     val_data = SpoofDatsetSystemID(data_files['dev_scp'], data_files['dev_utt2index'], binary_class=False)
-    # val_data    = SpoofDatsetEval(data_files['dev_scp'])
-    eval_data = SpoofDatsetEval(data_files['eval_scp'])
-    val_loader = torch.utils.data.DataLoader(
-        val_data, batch_size=test_batch_size, shuffle=False, **kwargs)
-    eval_loader = torch.utils.data.DataLoader(
-        eval_data, batch_size=test_batch_size, shuffle=False, **kwargs)
+    # val_data = SpoofDatsetEval(data_files['dev_scp'])
+    # eval_data = SpoofDatsetEval(data_files['eval_scp'])
+    val_loader = torch.utils.data.DataLoader(val_data,
+                                             batch_size=test_batch_size,
+                                             shuffle=False, **kwargs)
+    # eval_loader = torch.utils.data.DataLoader(
+    #     eval_data, batch_size=test_batch_size, shuffle=False, **kwargs)
 
     # forward pass for dev
     print("===> forward pass for dev set")
@@ -335,10 +337,10 @@ def forward_pass(_run, pretrained_model_id, test_batch_size, data_files, model_p
     print("===> dev scoring file saved at: '{}'".format(score_file_pth))
     prediction(val_loader, model, device, score_file_pth, data_files['dev_utt2systemID'], use_rnn, focal_obj)
     # forward pass for eval
-    print("===> forward pass for eval set")
-    score_file_pth = os.path.join(data_files['scoring_dir'], str(pretrained_model_id) + '-eval_scores.txt')
-    print("===> eval scoring file saved at: '{}'".format(score_file_pth))
-    eval_prediction(eval_loader, model, device, score_file_pth, data_files['eval_utt2systemID'], use_rnn, focal_obj)
+    # print("===> forward pass for eval set")
+    # score_file_pth = os.path.join(data_files['scoring_dir'], str(pretrained_model_id) + '-eval_scores.txt')
+    # print("===> eval scoring file saved at: '{}'".format(score_file_pth))
+    # eval_prediction(eval_loader, model, device, score_file_pth, data_files['eval_utt2systemID'], use_rnn, focal_obj)
 
 
 def train(train_loader, model, optimizer, epoch, device, log_interval, rnn, focal_obj):
@@ -491,8 +493,8 @@ def prediction(val_loader, model, device, output_file, utt2systemID_file, rnn, f
 
     with torch.no_grad():
         for i, (utt_list, input, target) in enumerate(val_loader):
-            input = input.to(device, non_blocking=True)
-            target = target.to(device, non_blocking=True).view((-1,))
+            input = input.to(device)
+            target = target.to(device).view((-1,))
 
             # compute output
             if rnn:
@@ -507,8 +509,8 @@ def prediction(val_loader, model, device, output_file, utt2systemID_file, rnn, f
             score = output[:, 0]  # use log-probability of the bonafide class for scoring
 
             for index, utt_id in enumerate(utt_list):
-                curr_utt = ''.join(utt_id.split('-')[0] + '-' + utt_id.split('-')[1])
-                utt2scores[curr_utt].append(score[index].item())
+                # curr_utt = ''.join(utt_id.split('-')[0] + '-' + utt_id.split('-')[1])
+                utt2scores[utt_id].append(score[index].item())
 
                 # first do averaging
         with open(utt2systemID_file, 'r') as f:
@@ -517,6 +519,7 @@ def prediction(val_loader, model, device, output_file, utt2systemID_file, rnn, f
         utt_list = [x.split()[0] for x in content]
         id_list = [x.split()[1] for x in content]
 
+        os.mkdir(os.path.split(output_file)[0])
         with open(output_file, 'w') as f:
             for index, utt_id in enumerate(utt_list):
                 score_list = utt2scores[utt_id]
@@ -537,7 +540,8 @@ def eval_prediction(eval_loader, model, device, output_file, utt2systemID_file, 
 
     with torch.no_grad():
         for i, (utt_list, input) in enumerate(eval_loader):
-            input = input.to(device, non_blocking=True)
+            # input = input.to(device, non_blocking=True)
+            input = input.to(device)
 
             # compute output
             if rnn:

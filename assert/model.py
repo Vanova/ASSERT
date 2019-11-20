@@ -53,7 +53,7 @@ def test_E2E():
     print(model)
     x = torch.randn(2, 1, 257, 400)
     output = model(x)
-    # print(output)
+    print(output)
 
 
 if __name__ == '__main__':
