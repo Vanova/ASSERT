@@ -51,11 +51,9 @@ def my_config():
         'DROPOUT_R': 0.0,  # dropout rate
     }
     data_files = {  # training
-        'train_scp': 'data_reader/feats/la_train_spec_tensor4.scp',
-        'train_utt2index': 'data_reader/utt2systemID/la_train_utt2index_8',
+        'train_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_dev_spec/feats.scp',
+        'train_utt2index': 'data_reader/utt2systemID/pa_train_utt2index_8',
         'dev_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_dev_spec/feats.scp',
-#        'dev_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_dev_fbank/feats.scp',
-#        'dev_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/logspec/raw_fbank_ASVspoof2019_PA_dev_spec.1.scp',
         'dev_utt2index': 'data_reader/utt2systemID/pa_dev_utt2index_8',
         'dev_utt2systemID': 'data_reader/utt2systemID/pa_dev_utt2systemID',
         'eval_utt2systemID': 'data_reader/utt2systemID/pa_eval_utt2systemID',
@@ -63,8 +61,8 @@ def my_config():
     }
 
     leave_one_out = False  # leave one out during train and val
-    eer_criteria = False  # train by dev acc or eer
-    batch_size = 64
+    eer_criteria = True  # train by dev acc or eer
+    batch_size = 1 #64
     test_batch_size = 1 # 64
     epochs = 10  # 20 for PA, 10 for LA
     start_epoch = 1
@@ -151,9 +149,12 @@ def work(_run, pretrained, batch_size, test_batch_size, epochs, start_epoch, log
     cudnn.benchmark = True  # It enables benchmark mode in cudnn.
 
     # Data loading code
-    train_data = SpoofDatsetSystemID(data_files['train_scp'], data_files['train_utt2index'], binary_class,
-                                     leave_one_out)
-    val_data = SpoofDatsetSystemID(data_files['dev_scp'], data_files['dev_utt2index'], binary_class, leave_one_out)
+    train_data = SpoofDatsetSystemID(data_files['train_scp'], data_files['train_utt2index'],
+                                     binary_class=False,
+                                     leave_one_out=leave_one_out)
+    val_data = SpoofDatsetSystemID(data_files['dev_scp'], data_files['dev_utt2index'],
+                                   binary_class=False,
+                                   leave_one_out=leave_one_out)
     train_loader = torch.utils.data.DataLoader(
         train_data, batch_size=batch_size, shuffle=True, **kwargs)
     val_loader = torch.utils.data.DataLoader(
@@ -360,9 +361,10 @@ def train(train_loader, model, optimizer, epoch, device, log_interval, rnn, foca
         data_time.update(time.time() - end)
 
         # Create vaiables
-        input = input.to(device, non_blocking=True)
-        # input  = input.to(device)
-        target = target.to(device, non_blocking=True).view((-1,))
+        # TODO fix sampling accross utterances!!!
+        input = input[0].to(device)
+        target = torch.tensor(target).to(device).view((-1,))
+        # input = input.to(device)
         # target = target.to(device).view((-1,))
 
         # compute output
@@ -415,8 +417,11 @@ def validate(val_loader, utt2systemID_file, model, device, log_interval, rnn, ee
     with torch.no_grad():
         end = time.time()
         for i, (utt_list, input, target) in enumerate(val_loader):
-            input = input.to(device, non_blocking=True)
-            target = target.to(device, non_blocking=True).view((-1,))
+            # TODO fix later the collacation function
+            input = input[0].to(device)
+            target = torch.tensor(target).to(device).view((-1,))
+            # input = input.to(device, non_blocking=True)
+            # target = target.to(device, non_blocking=True).view((-1,))
 
             # compute output
             if rnn:
@@ -440,10 +445,9 @@ def validate(val_loader, utt2systemID_file, model, device, log_interval, rnn, ee
             if eer:
                 score = output[:, 0]  # use log-probability of the bonafide class for scoring
                 for index, utt_id in enumerate(utt_list):
-                    curr_utt = ''.join(utt_id.split('-')[0] + '-' + utt_id.split('-')[1])
-                    utt2scores[curr_utt].append(score[index].item())
+                    utt2scores[utt_id[0]].append(score[index].item())
 
-                    # measure elapsed time
+            # measure elapsed time
             batch_time.update(time.time() - end)
             end = time.time()
 
@@ -470,7 +474,7 @@ def validate(val_loader, utt2systemID_file, model, device, log_interval, rnn, ee
             if utt_id not in utt2scores.keys():  # condition for leave on out
                 continue
             score_list = utt2scores[utt_id]
-            avg_score = reduce(lambda x, y: x + y, score_list) / len(score_list)
+            avg_score = np.mean(score_list)
             spoof_id = id_list[index]
             if spoof_id == 'bonafide':
                 bona_cm.append(avg_score)
@@ -711,6 +715,6 @@ class ScheduledOptim(object):
 
 @ex.automain
 def main():
-    # work()
+    work()
     # post()
-    forward_pass()
+    # forward_pass()
