@@ -53,7 +53,9 @@ def my_config():
     data_files = {  # training
         'train_scp': 'data_reader/feats/la_train_spec_tensor4.scp',
         'train_utt2index': 'data_reader/utt2systemID/la_train_utt2index_8',
-        'dev_scp': '/home/vano/wrkdir/projects_data/antispoofing_speech/logspec/raw_fbank_ASVspoof2019_PA_dev_spec.1.scp',
+        'dev_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_dev_spec/feats.scp',
+#        'dev_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_dev_fbank/feats.scp',
+#        'dev_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/logspec/raw_fbank_ASVspoof2019_PA_dev_spec.1.scp',
         'dev_utt2index': 'data_reader/utt2systemID/pa_dev_utt2index_8',
         'dev_utt2systemID': 'data_reader/utt2systemID/pa_dev_utt2systemID',
         'eval_utt2systemID': 'data_reader/utt2systemID/pa_eval_utt2systemID',
@@ -63,7 +65,7 @@ def my_config():
     leave_one_out = False  # leave one out during train and val
     eer_criteria = False  # train by dev acc or eer
     batch_size = 64
-    test_batch_size = 64
+    test_batch_size = 1 # 64
     epochs = 10  # 20 for PA, 10 for LA
     start_epoch = 1
     n_warmup_steps = 1000
@@ -493,15 +495,18 @@ def prediction(val_loader, model, device, output_file, utt2systemID_file, rnn, f
 
     with torch.no_grad():
         for i, (utt_list, input, target) in enumerate(val_loader):
-            input = input.to(device)
-            target = target.to(device).view((-1,))
+            input = input[0].to(device)
+            #target = target.to(device).view((-1,))
+            print(i, utt_list)
 
             # compute output
             if rnn:
                 hidden = model.init_hidden(input.size(0))
                 output = model(input, hidden)
             else:
+                print(input.shape)
                 output = model(input)
+                #print(output)            
 
             # get score 
             if focal_obj:
@@ -510,8 +515,7 @@ def prediction(val_loader, model, device, output_file, utt2systemID_file, rnn, f
 
             for index, utt_id in enumerate(utt_list):
                 # curr_utt = ''.join(utt_id.split('-')[0] + '-' + utt_id.split('-')[1])
-                utt2scores[utt_id].append(score[index].item())
-
+                utt2scores[utt_id[0]].append(score[index].item())
                 # first do averaging
         with open(utt2systemID_file, 'r') as f:
             temp = f.readlines()
@@ -519,11 +523,11 @@ def prediction(val_loader, model, device, output_file, utt2systemID_file, rnn, f
         utt_list = [x.split()[0] for x in content]
         id_list = [x.split()[1] for x in content]
 
-        os.mkdir(os.path.split(output_file)[0])
+        #os.mkdir(os.path.split(output_file)[0], True)
         with open(output_file, 'w') as f:
             for index, utt_id in enumerate(utt_list):
                 score_list = utt2scores[utt_id]
-                avg_score = reduce(lambda x, y: x + y, score_list) / len(score_list)
+                avg_score = np.mean(score_list) # reduce(lambda x, y: x + y, score_list) / len(score_list)
                 spoof_id = id_list[index]
                 if spoof_id == 'bonafide':
                     f.write('%s %s %s %f\n' % (utt_id, '-', 'bonafide', avg_score))

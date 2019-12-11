@@ -10,13 +10,19 @@ def convert_la(scp_file, systemID_file, out_file):
 
     with open(systemID_file) as f:
         temp = f.readlines()
-    utt2ID = {x.strip().split()[0]: x.strip().split()[1] for x in temp}
+    utt2ID = {x.strip().split()[1]: x.strip().split()[3] for x in temp}
 
     with open(out_file, 'w') as f:
-        for key in key_list:
-            curr_utt = ''.join(key.split('-')[0] + '-' + key.split('-')[1])
-            label = utt2ID[curr_utt]
-            if label == 'bonafide':
+        for i,key in enumerate(key_list):
+            #curr_utt = ''.join(key.split('-')[0] + '-' + key.split('-')[1])
+            #label = utt2ID[curr_utt]
+            if key in utt2ID:
+                label = utt2ID[key]
+            else:
+                print('[WARN] Utterance is absent: %d: %s' % (i, key))
+                continue
+
+            if label == '-':
                 f.write('%s %d\n' % (key, 0))
             elif label == 'SS_1':
                 f.write('%s %d\n' % (key, 1))
@@ -43,18 +49,26 @@ def convert_pa(scp_file, systemID_file, out_index_file, out_ID_file):
 
     with open(systemID_file) as f:
         temp = f.readlines()
-    utt2ID = {x.strip().split()[1]: x.strip().split()[4] for x in temp}
+    utt2ID = {x.strip().split()[1]: x.strip().split()[3] for x in temp}
 
     with open(out_ID_file, 'w') as f:
         f.write('')
 
     with open(out_index_file, 'w') as f:
         with open(out_ID_file, 'w') as f2:
-            for key in key_list:
-                label = utt2ID[key]
-                f2.write('%s %s\n' % (key, label))
+            for i, key in enumerate(key_list):
+                if key in utt2ID:
+                    label = utt2ID[key]
+                else:
+                    print('[WARN] Utterance is absent: %d: %s' % (i, key))
+                    continue
 
-                if label == 'bonafide':
+                if label == '-':
+                    f2.write('%s %s\n' % (key, 'bonafide'))
+                else:
+                    f2.write('%s %s\n' % (key, label))
+
+                if label == '-': # 'bonafide'
                     f.write('%s %d\n' % (key, 0))
                 elif label == 'AA':
                     f.write('%s %d\n' % (key, 1))
@@ -117,33 +131,33 @@ def convert_pa_leave_one_out(scp_file, systemID_file, out_file):
 
 if __name__ == '__main__':
     curr_wd = 'utt2systemID/'
-    # systemID_files = ['la_dev_utt2systemID', 'la_train_utt2systemID',
-    #                   'pa_dev_utt2systemID', 'pa_train_utt2systemID']
-    # out_files = ['la_dev_utt2index_8', 'la_train_utt2index_8',
-    #              'pa_dev_utt2index_8', 'pa_train_utt2index_8']
-    # scp_files = ['feats/la_dev_spec_tensor4.scp', 'feats/la_train_spec_tensor4.scp',
-    #              'feats/pa_dev_spec_tensor4.scp', 'feats/pa_train_spec_tensor4.scp']
 
-    # systemID_files = ['pa_dev_utt2systemID', 'pa_train_utt2systemID']
-    # out_files = ['pa_dev_utt2index_6', 'pa_train_utt2index_6']
-    # scp_files = ['feats/pa_dev_spec_tensor3.scp', 'feats/pa_train_spec_tensor3.scp']
+    data_root = '/home/vano/wrkdir/datasets/asvspoof2019/'
+    feat_dir = '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/'
 
-    data_root = '/home/vano/wrkdir/projects_data/antispoofing_speech/'
     systemID_files = [data_root + 'LA/ASVspoof2019_LA_cm_protocols/ASVspoof2019.LA.cm.dev.trl.txt',
-                      data_root + 'PA/ASVspoof2019_PA_cm_protocols/ASVspoof2019.PA.cm.dev.trl.txt']
+                      data_root + 'LA/ASVspoof2019_LA_cm_protocols/ASVspoof2019.LA.cm.train.trn.txt',
+                      data_root + 'PA/ASVspoof2019_PA_cm_protocols/ASVspoof2019.PA.cm.dev.trl.txt',
+                      data_root + 'PA/ASVspoof2019_PA_cm_protocols/ASVspoof2019.PA.cm.train.trn.txt']
     out_files = ['la_dev_utt2index_8',
-                 'pa_dev_utt2index_8']
+                 'la_train_utt2index_8',
+                 'pa_dev_utt2index_8',
+                 'pa_train_utt2index_8']
     out_ID_files = ['la_dev_utt2systemID',
-                    'pa_dev_utt2systemID']
-    scp_files = [data_root + 'logspec/raw_fbank_ASVspoof2019_LA_dev_spec.1.scp',
-                 data_root + 'logspec/raw_fbank_ASVspoof2019_PA_dev_spec.1.scp']
+                    'la_train_utt2systemID',
+                    'pa_dev_utt2systemID',
+                    'pa_train_utt2systemID']
+
+    scp_files = [feat_dir + 'ASVspoof2019_LA_dev_spec/feats.scp',
+                 feat_dir + 'ASVspoof2019_LA_train_spec/feats.scp',
+                 feat_dir + 'ASVspoof2019_PA_dev_spec/feats.scp',
+                 feat_dir + 'ASVspoof2019_PA_train_spec/feats.scp']
 
 
-    # for i in range(0, 2):
-    #     convert_la(scp_files[i], curr_wd + systemID_files[i],
-    #                curr_wd + out_files[i])
+    #for i in range(0, 1):
+    #    convert_la(scp_files[i], systemID_files[i], curr_wd + out_files[i])
 
-    for i in range(1, 2):
+    for i in range(3, 4):
         convert_pa(scp_files[i], systemID_files[i],
                    curr_wd + out_files[i], curr_wd + out_ID_files[i])
 

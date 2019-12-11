@@ -156,7 +156,9 @@ class SpoofDatsetSystemID(data.Dataset):
             for la: leave out the class with label == 6
     '''
 
-    def __init__(self, scp_file, utt2index_file, binary_class, leave_one_out=False):
+    def __init__(self, scp_file, utt2index_file, binary_class, slide_wnd=400, leave_one_out=False):
+        self.wnd_size = slide_wnd
+
         with open(scp_file) as f:
             temp = f.readlines()
         content = [x.strip() for x in temp]
@@ -193,8 +195,41 @@ class SpoofDatsetSystemID(data.Dataset):
     def __getitem__(self, counter):
         index = self.all_idx[counter]
         utt_id = self.key_dic[index]
-        tmp = read_mat(self.ark_dic[index])[:150]
-        X = np.expand_dims(tmp.T, axis=0)
-        # X = np.expand_dims(read_mat(self.ark_dic[index]), axis=0)
-        y = self.label_dic[index]
-        return utt_id, X, y
+        feats = read_mat(self.ark_dic[index]).T
+        # slide utterance
+        pad_feats = self._pad_utterance(feats, self.wnd_size)
+        slides = self._construct_slides(pad_feats, self.wnd_size)
+
+        utt_ids = [utt_id] * slides.shape[0]
+        ys = [self.label_dic[index]] * slides.shape[0]
+        return utt_ids, slides, ys
+
+    @staticmethod
+    def _pad_utterance(feat, wnd_size):
+        """
+        feat: ndarray, [bands, frames]
+        wnd_size: Integer, size of sliding window
+        return: fixed utterance features
+        """
+        init_len = feat.shape[1]
+        max_len = int(wnd_size * np.ceil(float(init_len) / wnd_size))
+        # in case when utterance shorter than window
+        rep = max_len // init_len
+        tensor = np.tile(feat, rep)
+        # padding
+        rest_n = int(max_len % init_len)
+        tensor = np.pad(tensor, ((0, 0), (0, rest_n)), 'wrap')
+        return tensor
+
+    @staticmethod
+    def _construct_slides(feat, wnd_size):
+        rep = feat.shape[1] // wnd_size
+        rep = 2 * rep - 1  # slides
+        hop = wnd_size // 2
+        slides = []
+        for i in range(rep):
+            s = feat[:, hop * i:hop * i + wnd_size]
+            s = np.expand_dims(s, axis=0)
+            slides.append(s)
+        return np.array(slides)
+

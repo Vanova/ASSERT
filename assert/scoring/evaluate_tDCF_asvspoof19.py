@@ -4,9 +4,9 @@ import eval_metrics as em
 import matplotlib.pyplot as plt
 
 # Replace CM scores with your own scores or provide score file as the first argument.
-cm_score_file = 'scores/cm_dev.txt'
+cm_score_file = 'pa_cm_scores/1-dev_scores.txt'
 # Replace ASV scores with organizers' scores or provide score file as the second argument.
-asv_score_file = 'asv_scores/la_scores'
+asv_score_file = '/home/vano/wrkdir/datasets/asvspoof2019/PA/ASVspoof2019_PA_asv_scores/ASVspoof2019.PA.asv.dev.gi.trl.scores.txt'
 
 args = sys.argv
 if len(args) > 1:

@@ -62,16 +62,19 @@ if __name__ == '__main__':
             out_ark = curr_wd + '/' + 'feats/' + mode + feat + 'tensor.ark'
             ark_scp = 'ark:| copy-feats --compress=true ark:- ark,scp:' + out_ark + ',' + out_scp
             construct_tensor(in_scp, ark_scp, truncate_len)
-    
-    for mode in ['pa_train_', 'pa_dev_']:
+    """    
+    feat_dir = '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/'
+
+    for mode in ['ASVspoof2019_PA_dev_']:
         truncate_len = 400
-        for feat in ['fbank_cm_', 'fbank_']:
-            in_scp  = curr_wd + '/' + 'feats/' + mode + feat + 'orig.scp'
-            out_scp = curr_wd + '/' + 'feats/' + mode + feat + 'tensor3.scp'
-            out_ark = curr_wd + '/' + 'feats/' + mode + feat + 'tensor3.ark'
+        for feat in ['spec_cm', 'spec']:
+            in_scp  = feat_dir + mode + feat + '/feats.scp'
+            out_scp = curr_wd + '/' + 'feats/' + mode + feat + 'feats_400.scp'
+            out_ark = curr_wd + '/' + 'feats/' + mode + feat + 'feats_400.ark'
             ark_scp = 'ark:| copy-feats --compress=true ark:- ark,scp:' + out_ark + ',' + out_scp
             construct_tensor(in_scp, ark_scp, truncate_len)
-    
+
+    """
     for mode in ['la_dev_', 'la_train_']:
         truncate_len = 400
         for feat in ['spec_']:
@@ -89,7 +92,7 @@ if __name__ == '__main__':
             out_ark = curr_wd + '/' + 'feats/' + mode + feat + 'tensor4.ark'
             ark_scp = 'ark:| copy-feats --compress=true ark:- ark,scp:' + out_ark + ',' + out_scp
             construct_slide_tensor(in_scp, ark_scp, truncate_len)
-    """
+
     for mode in ['la_eval_', 'pa_eval_']:
         truncate_len = 400
         for feat in ['spec_', 'spec_cm_']:
@@ -107,3 +110,4 @@ if __name__ == '__main__':
             out_ark = curr_wd + '/' + 'feats/' + mode + feat + 'tensor2.ark'
             ark_scp = 'ark:| copy-feats --compress=true ark:- ark,scp:' + out_ark + ',' + out_scp
             construct_slide_tensor(in_scp, ark_scp, truncate_len)
+    """
