@@ -37,7 +37,7 @@ ex.observers.append(FileStorageObserver.create('snapshots'))
 def my_config():
     model_params = {
         'MODEL_SELECT': 6,  # which model
-        'NUM_SPOOF_CLASS': 2,  # LA: 7 or PA: 10 x-class classification
+        'NUM_SPOOF_CLASS': 2, #2,  # LA: 7 or PA: 10 x-class classification
         'FOCAL_GAMMA': None,  # gamma parameter for focal loss; if obj is not focal loss, set this to None
         'NUM_RESNET_BLOCK': 5,  # number of resnet blocks in ResNet
         'AFN_UPSAMPLE': 'Bilinear',  # upsampling method in AFNet: Conv or Bilinear
@@ -51,7 +51,7 @@ def my_config():
         'DROPOUT_R': 0.0,  # dropout rate
     }
     data_files = {  # training
-        'train_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_dev_spec/feats.scp',
+        'train_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_train_spec/feats.scp',
         'train_utt2index': 'data_reader/utt2systemID/pa_train_utt2index_8',
         'dev_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_dev_spec/feats.scp',
         'dev_utt2index': 'data_reader/utt2systemID/pa_dev_utt2index_8',
@@ -62,14 +62,14 @@ def my_config():
 
     leave_one_out = False  # leave one out during train and val
     eer_criteria = True  # train by dev acc or eer
-    batch_size = 1 #64
+    batch_size = 64 #64
     test_batch_size = 1 # 64
     epochs = 10  # 20 for PA, 10 for LA
     start_epoch = 1
     n_warmup_steps = 1000
     log_interval = 100
     pretrained = None  # 'snapshots/119/model_best.pth.tar'
-    pretrained_model_id = 1  # for forward pass
+    pretrained_model_id = 15  # for forward pass
     class_labels = [  # for post analysis
         'bonafide', 'AB', 'AC',
         'BA', 'BB', 'BC', 'CA', 'CB', 'CC', 'AA',
@@ -150,10 +150,11 @@ def work(_run, pretrained, batch_size, test_batch_size, epochs, start_epoch, log
 
     # Data loading code
     train_data = SpoofDatsetSystemID(data_files['train_scp'], data_files['train_utt2index'],
-                                     binary_class=False,
+                                     rnd_nslides=True,
+                                     binary_class=binary_class,
                                      leave_one_out=leave_one_out)
     val_data = SpoofDatsetSystemID(data_files['dev_scp'], data_files['dev_utt2index'],
-                                   binary_class=False,
+                                   binary_class=binary_class,
                                    leave_one_out=leave_one_out)
     train_loader = torch.utils.data.DataLoader(
         train_data, batch_size=batch_size, shuffle=True, **kwargs)
@@ -308,8 +309,8 @@ def forward_pass(_run, pretrained_model_id, test_batch_size, data_files, model_p
     print('===> Model total parameter: {}'.format(num_params))
 
     if pretrained_model_id:
-        # pretrain_pth = 'snapshots/' + str(pretrained_model_id) + '/model_best.pth.tar'
-        pretrain_pth = '../pretrained/pa/senet34'
+        pretrain_pth = 'snapshots/' + str(pretrained_model_id) + '/model_best.pth.tar'
+        #pretrain_pth = '../pretrained/pa/senet34'
         if os.path.isfile(pretrain_pth):
             print("===> loading checkpoint '{}'".format(pretrain_pth))
             checkpoint = torch.load(pretrain_pth, map_location=lambda storage, loc: storage)  # load for cpu
@@ -362,10 +363,15 @@ def train(train_loader, model, optimizer, epoch, device, log_interval, rnn, foca
 
         # Create vaiables
         # TODO fix sampling accross utterances!!!
-        input = input[0].to(device)
-        target = torch.tensor(target).to(device).view((-1,))
-        # input = input.to(device)
-        # target = target.to(device).view((-1,))
+        # input = input[0].to(device)
+        # target = torch.tensor(target).to(device).view((-1,))
+        # TODO note, features comes trasposed
+        input = torch.reshape(input, (input.size(0) * input.size(1),) + input.shape[2:])
+        input = input.to(device)
+        target = torch.stack(target)
+        target = target.reshape(-1)
+        target = target.to(device).view((-1,))
+        
 
         # compute output
         if rnn:
@@ -507,10 +513,8 @@ def prediction(val_loader, model, device, output_file, utt2systemID_file, rnn, f
             if rnn:
                 hidden = model.init_hidden(input.size(0))
                 output = model(input, hidden)
-            else:
-                print(input.shape)
+            else:                
                 output = model(input)
-                #print(output)            
 
             # get score 
             if focal_obj:

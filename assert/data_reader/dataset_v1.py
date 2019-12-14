@@ -156,8 +156,10 @@ class SpoofDatsetSystemID(data.Dataset):
             for la: leave out the class with label == 6
     '''
 
-    def __init__(self, scp_file, utt2index_file, binary_class, slide_wnd=400, leave_one_out=False):
+    def __init__(self, scp_file, utt2index_file, binary_class, slide_wnd=400, rnd_nslides=False, leave_one_out=False):
         self.wnd_size = slide_wnd
+        self.rnd_nslides = rnd_nslides
+        self.nslides = 1 #4
 
         with open(scp_file) as f:
             temp = f.readlines()
@@ -198,7 +200,10 @@ class SpoofDatsetSystemID(data.Dataset):
         feats = read_mat(self.ark_dic[index]).T
         # slide utterance
         pad_feats = self._pad_utterance(feats, self.wnd_size)
-        slides = self._construct_slides(pad_feats, self.wnd_size)
+        if self.rnd_nslides:
+            slides = self._random_slides(pad_feats, self.wnd_size, self.nslides)
+        else:
+            slides = self._consecutive_slides(pad_feats, self.wnd_size)
 
         utt_ids = [utt_id] * slides.shape[0]
         ys = [self.label_dic[index]] * slides.shape[0]
@@ -213,7 +218,7 @@ class SpoofDatsetSystemID(data.Dataset):
         """
         init_len = feat.shape[1]
         max_len = int(wnd_size * np.ceil(float(init_len) / wnd_size))
-        # in case when utterance shorter than window
+        # in case when utterance is shorter than window
         rep = max_len // init_len
         tensor = np.tile(feat, rep)
         # padding
@@ -222,7 +227,7 @@ class SpoofDatsetSystemID(data.Dataset):
         return tensor
 
     @staticmethod
-    def _construct_slides(feat, wnd_size):
+    def _consecutive_slides(feat, wnd_size):
         rep = feat.shape[1] // wnd_size
         rep = 2 * rep - 1  # slides
         hop = wnd_size // 2
@@ -232,4 +237,16 @@ class SpoofDatsetSystemID(data.Dataset):
             s = np.expand_dims(s, axis=0)
             slides.append(s)
         return np.array(slides)
+
+    @staticmethod
+    def _random_slides(feat, wnd_size, nslides):
+        end = feat.shape[1] - wnd_size + 1
+        # start = np.random.randint(0, end)
+        starts = np.random.randint(0, end, size=nslides)
+        starts.sort()
+        chunks = np.zeros((nslides, 1, feat.shape[0], wnd_size), dtype=np.float32)
+        for id, s in enumerate(starts):
+            buf = feat[:, s:s + wnd_size]
+            chunks[id] = np.expand_dims(buf, axis=0)
+        return chunks
 
