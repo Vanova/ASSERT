@@ -64,7 +64,7 @@ def my_config():
     eer_criteria = True  # train by dev acc or eer
     batch_size = 64 #64
     test_batch_size = 1 # 64
-    epochs = 10  # 20 for PA, 10 for LA
+    epochs = 20  # 20 for PA, 10 for LA
     start_epoch = 1
     n_warmup_steps = 1000
     log_interval = 100
