@@ -1,6 +1,7 @@
 # create multi-labels for model training
 
-def convert_la(scp_file, systemID_file, out_file):
+
+def convert_la(scp_file, systemID_file, out_index_file, out_ID_file):
     ''' multi-class classification for LA: SS_1, SS_2, SS_4, US_1, VC_1, VC_4 --> 7 classes
         (bonafide: 0), (SS_1: 1), (SS_2: 2), (SS_4: 3), (US_1: 4), (VC_1: 5), (VC_4: 6)
     '''
@@ -12,30 +13,37 @@ def convert_la(scp_file, systemID_file, out_file):
         temp = f.readlines()
     utt2ID = {x.strip().split()[1]: x.strip().split()[3] for x in temp}
 
-    with open(out_file, 'w') as f:
-        for i,key in enumerate(key_list):
-            #curr_utt = ''.join(key.split('-')[0] + '-' + key.split('-')[1])
-            #label = utt2ID[curr_utt]
-            if key in utt2ID:
-                label = utt2ID[key]
-            else:
-                print('[WARN] Utterance is absent: %d: %s' % (i, key))
-                continue
+    with open(out_index_file, 'w') as f:
+        with open(out_ID_file, 'w') as fID:
+            for i, key in enumerate(key_list):
+                if key in utt2ID:
+                    label = utt2ID[key]
+                else:
+                    print('[WARN] Utterance is absent: %d: %s' % (i, key))
+                    continue
 
-            if label == '-':
-                f.write('%s %d\n' % (key, 0))
-            elif label == 'SS_1':
-                f.write('%s %d\n' % (key, 1))
-            elif label == 'SS_2':
-                f.write('%s %d\n' % (key, 2))
-            elif label == 'SS_4':
-                f.write('%s %d\n' % (key, 3))
-            elif label == 'US_1':
-                f.write('%s %d\n' % (key, 4))
-            elif label == 'VC_1':
-                f.write('%s %d\n' % (key, 5))
-            elif label == 'VC_4':
-                f.write('%s %d\n' % (key, 6))
+                if label == '-':
+                    fID.write('%s %s\n' % (key, 'bonafide'))
+                else:
+                    fID.write('%s %s\n' % (key, label))
+
+                if label == '-':  # bonafide
+                    f.write('%s %d\n' % (key, 0))
+                elif label == 'A01':
+                    f.write('%s %d\n' % (key, 1))
+                elif label == 'A02':
+                    f.write('%s %d\n' % (key, 2))
+                elif label == 'A03':
+                    f.write('%s %d\n' % (key, 3))
+                elif label == 'A04':
+                    f.write('%s %d\n' % (key, 4))
+                elif label == 'A05':
+                    f.write('%s %d\n' % (key, 5))
+                elif label == 'A06':
+                    f.write('%s %d\n' % (key, 6))
+                else:
+                    print('[INFO] new label: %s' % label)
+                    f.write('%s %d\n' % (key, int(label[1:])))
 
 
 def convert_pa(scp_file, systemID_file, out_index_file, out_ID_file):
@@ -46,13 +54,11 @@ def convert_pa(scp_file, systemID_file, out_index_file, out_ID_file):
     with open(scp_file) as f:
         temp = f.readlines()
     key_list = [x.strip().split()[0] for x in temp]
+    print(len(key_list))
 
     with open(systemID_file) as f:
         temp = f.readlines()
     utt2ID = {x.strip().split()[1]: x.strip().split()[3] for x in temp}
-
-    with open(out_ID_file, 'w') as f:
-        f.write('')
 
     with open(out_index_file, 'w') as f:
         with open(out_ID_file, 'w') as f2:
@@ -137,29 +143,37 @@ if __name__ == '__main__':
 
     systemID_files = [data_root + 'LA/ASVspoof2019_LA_cm_protocols/ASVspoof2019.LA.cm.dev.trl.txt',
                       data_root + 'LA/ASVspoof2019_LA_cm_protocols/ASVspoof2019.LA.cm.train.trn.txt',
+                      data_root + 'LA/ASVspoof2019_LA_cm_protocols/ASVspoof2019.LA.cm.eval.trl.txt',
                       data_root + 'PA/ASVspoof2019_PA_cm_protocols/ASVspoof2019.PA.cm.dev.trl.txt',
-                      data_root + 'PA/ASVspoof2019_PA_cm_protocols/ASVspoof2019.PA.cm.train.trn.txt']
+                      data_root + 'PA/ASVspoof2019_PA_cm_protocols/ASVspoof2019.PA.cm.train.trn.txt',
+                      data_root + 'PA/ASVspoof2019_PA_cm_protocols/ASVspoof2019.PA.cm.eval.trl.txt']
     out_files = ['la_dev_utt2index_8',
                  'la_train_utt2index_8',
+                 'la_eval_utt2index_8',
                  'pa_dev_utt2index_8',
-                 'pa_train_utt2index_8']
+                 'pa_train_utt2index_8',
+                 'pa_eval_utt2index_8']
     out_ID_files = ['la_dev_utt2systemID',
                     'la_train_utt2systemID',
+                    'la_eval_utt2systemID',
                     'pa_dev_utt2systemID',
-                    'pa_train_utt2systemID']
+                    'pa_train_utt2systemID',
+                    'pa_eval_utt2systemID']
 
     scp_files = [feat_dir + 'ASVspoof2019_LA_dev_spec/feats.scp',
                  feat_dir + 'ASVspoof2019_LA_train_spec/feats.scp',
+                 feat_dir + 'ASVspoof2019_LA_eval_spec/feats.scp',
                  feat_dir + 'ASVspoof2019_PA_dev_spec/feats.scp',
-                 feat_dir + 'ASVspoof2019_PA_train_spec/feats.scp']
+                 feat_dir + 'ASVspoof2019_PA_train_spec/feats.scp',
+                 feat_dir + 'ASVspoof2019_PA_eval_spec/feats.scp',]
 
-
-    #for i in range(0, 1):
-    #    convert_la(scp_files[i], systemID_files[i], curr_wd + out_files[i])
-
-    for i in range(3, 4):
-        convert_pa(scp_files[i], systemID_files[i],
+    for i in range(2, 3):
+        convert_la(scp_files[i], systemID_files[i],
                    curr_wd + out_files[i], curr_wd + out_ID_files[i])
+    
+    #for i in range(5, 6):        
+    #    convert_pa(scp_files[i], systemID_files[i],
+    #               curr_wd + out_files[i], curr_wd + out_ID_files[i])
 
     """ 
     la  |  spec with cm  |  la_{train,dev}_spec_cm_tensor.scp   |  (257 by 400)  |  la_{train,dev}_utt2index    |  regular 
