@@ -51,13 +51,13 @@ def my_config():
         'DROPOUT_R': 0.0,  # dropout rate
     }
     data_files = {  # training
-        'train_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_train_spec/feats.scp',
-        'train_utt2index': 'data_reader/utt2systemID/pa_train_utt2index_8',
-        'dev_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_dev_spec/feats.scp',
-        'dev_utt2index': 'data_reader/utt2systemID/pa_dev_utt2index_8',
-        'dev_utt2systemID': 'data_reader/utt2systemID/pa_dev_utt2systemID',
-        'eval_utt2systemID': 'data_reader/utt2systemID/pa_eval_utt2systemID',
-        'scoring_dir': 'scoring/pa_cm_scores/',
+        'train_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_LA_train_spec/feats.scp',
+        'train_utt2index': 'data_reader/utt2systemID/la_train_utt2index_8',
+        'dev_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_LA_dev_spec/feats.scp',
+        'dev_utt2index': 'data_reader/utt2systemID/la_dev_utt2index_8',
+        'dev_utt2systemID': 'data_reader/utt2systemID/la_dev_utt2systemID',
+        'eval_utt2systemID': 'data_reader/utt2systemID/la_eval_utt2systemID',
+        'scoring_dir': 'scoring/la_cm_scores/',
     }
 
     leave_one_out = False  # leave one out during train and val
