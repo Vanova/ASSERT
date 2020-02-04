@@ -1,0 +1,5 @@
+INFO - asvspoof19 - Running command 'main'
+INFO - asvspoof19 - Started run with ID "32"
+squeeze-and-excitation network
+===> Model total parameter: 1344276
+Epoch: [1][0/844]	Time 9.083 (9.083)	Data 2.992 (2.992)	LR 0.000004	Loss 1.2561 (1.2561)	Acc@1 7.812 (7.812)

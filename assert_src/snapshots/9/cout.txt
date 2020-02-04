@@ -1,0 +1,2 @@
+INFO - asvspoof19 - Running command 'main'
+INFO - asvspoof19 - Started run with ID "9"

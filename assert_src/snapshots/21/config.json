@@ -1,0 +1,49 @@
+{
+  "batch_size": 64, 
+  "class_labels": [
+    "bonafide", 
+    "AB", 
+    "AC", 
+    "BA", 
+    "BB", 
+    "BC", 
+    "CA", 
+    "CB", 
+    "CC", 
+    "AA"
+  ], 
+  "data_files": {
+    "dev_scp": "/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_LA_eval_spec/feats.scp", 
+    "dev_utt2index": "data_reader/utt2systemID/la_eval_utt2index_8", 
+    "dev_utt2systemID": "data_reader/utt2systemID/la_eval_utt2systemID", 
+    "eval_utt2systemID": "data_reader/utt2systemID/la_eval_utt2systemID", 
+    "scoring_dir": "scoring/la_cm_scores_eval/", 
+    "train_scp": "/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_LA_train_spec/feats.scp", 
+    "train_utt2index": "data_reader/utt2systemID/la_train_utt2index_8"
+  }, 
+  "eer_criteria": true, 
+  "epochs": 20, 
+  "leave_one_out": false, 
+  "log_interval": 100, 
+  "model_params": {
+    "AFN_ACTIVATION": "sigmoid", 
+    "AFN_UPSAMPLE": "Bilinear", 
+    "DROPOUT_R": 0.0, 
+    "FOCAL_GAMMA": null, 
+    "MODEL_SELECT": 6, 
+    "NUM_HEADS": 3, 
+    "NUM_RESNET_BLOCK": 5, 
+    "NUM_SPOOF_CLASS": 2, 
+    "RNN_BI": true, 
+    "RNN_HIDDEN": 128, 
+    "RNN_LAYERS": 4, 
+    "SAFN_DIM": "T", 
+    "SAFN_HIDDEN": 10
+  }, 
+  "n_warmup_steps": 1000, 
+  "pretrained": null, 
+  "pretrained_model_id": 20, 
+  "seed": 319846625, 
+  "start_epoch": 1, 
+  "test_batch_size": 1
+}
