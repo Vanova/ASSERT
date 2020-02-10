@@ -28,7 +28,7 @@
       ], 
       [
         "main.py", 
-        "_sources/main_fd28d3ab825b353676e3a43354ae71f5.py"
+        "_sources/main_95fe1ad0a6a2333797c5094f234b4fa8.py"
       ], 
       [
         "model.py", 
@@ -48,7 +48,7 @@
       ]
     ]
   }, 
-  "heartbeat": "2020-02-04T02:33:05.919779", 
+  "heartbeat": "2020-02-04T05:14:11.141014", 
   "host": {
     "ENV": {}, 
     "cpu": "Intel(R) Xeon(R) CPU           E5540  @ 2.53GHz", 
@@ -98,6 +98,7 @@
   }, 
   "resources": [], 
   "result": null, 
-  "start_time": "2020-02-04T02:31:25.879249", 
-  "status": "RUNNING"
+  "start_time": "2020-02-04T05:02:50.074689", 
+  "status": "COMPLETED", 
+  "stop_time": "2020-02-04T05:14:11.138622"
 }

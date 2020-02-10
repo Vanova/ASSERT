@@ -53,14 +53,17 @@ def my_config():
     data_files = {  # training
         'train_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_train_spec/feats.scp',
         'train_utt2index': 'data_reader/utt2systemID/pa_train_utt2index_8',
-        'dev_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_dev_spec/feats.scp',
+        'dev_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_dev_spec_cm_wnd/feats.scp',
         'dev_utt2index': 'data_reader/utt2systemID/pa_dev_utt2index_8',
         'dev_utt2systemID': 'data_reader/utt2systemID/pa_dev_utt2systemID',
+        #'dev_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_dev_spec/feats.scp',
+        #'dev_utt2index': 'data_reader/utt2systemID/pa_dev_utt2index_8',
+        #'dev_utt2systemID': 'data_reader/utt2systemID/pa_dev_utt2systemID',
         #'dev_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/tasks_spec_cm/feats.scp',
         #'dev_utt2index': 'data_reader/utt2systemID/tasks_utt2index_8',
         #'dev_utt2systemID': 'data_reader/utt2systemID/tasks_utt2systemID',
         'eval_utt2systemID': 'data_reader/utt2systemID/pa_eval_utt2systemID',
-        'scoring_dir': 'scoring/tasks_scores/',
+        'scoring_dir': 'scoring/pa_spec_cm_wnd_dev/' # 'scoring/tasks_scores/',
     }
 
     leave_one_out = False  # leave one out during train and val
@@ -72,7 +75,7 @@ def my_config():
     n_warmup_steps = 1000
     log_interval = 100
     pretrained = None  # 'snapshots/119/model_best.pth.tar'
-    pretrained_model_id = 18# PA 18 # LA 20  # for forward pass
+    pretrained_model_id = 18 # PA 18 # LA 20  # for forward pass
     class_labels = [  # for post analysis
         'bonafide', 'AB', 'AC',
         'BA', 'BB', 'BC', 'CA', 'CB', 'CC', 'AA',
@@ -312,8 +315,8 @@ def forward_pass(_run, pretrained_model_id, test_batch_size, data_files, model_p
     print('===> Model total parameter: {}'.format(num_params))
 
     if pretrained_model_id:
-        pretrain_pth = 'snapshots/' + str(pretrained_model_id) + '/model_best.pth.tar'
-        #pretrain_pth = '../pretrained/pa/senet34'
+        #pretrain_pth = 'snapshots/' + str(pretrained_model_id) + '/model_best.pth.tar'
+        pretrain_pth = '../pretrained/pa/senet34'
         if os.path.isfile(pretrain_pth):
             print("===> loading checkpoint '{}'".format(pretrain_pth))
             checkpoint = torch.load(pretrain_pth, map_location=lambda storage, loc: storage)  # load for cpu
@@ -522,7 +525,7 @@ def prediction(val_loader, model, device, output_file, utt2systemID_file, rnn, f
             # get score 
             if focal_obj:
                 output = F.log_softmax(output, dim=-1)  # apply softmax if model trained with focal loss
-            score = output[:, 0] #1. - 1. / (1. + np.exp(-output[:, 0]))  # use log-probability of the bonafide class for scoring
+            score = output[:, 1] #output[:, 0] #1. - 1. / (1. + np.exp(-output[:, 0]))  # use log-probability of the bonafide class for scoring
 
             for index, utt_id in enumerate(utt_list):
                 # curr_utt = ''.join(utt_id.split('-')[0] + '-' + utt_id.split('-')[1])
@@ -722,6 +725,6 @@ class ScheduledOptim(object):
 
 @ex.automain
 def main():
-    work()
+    # work()
     # post()
-    # forward_pass()
+    forward_pass()

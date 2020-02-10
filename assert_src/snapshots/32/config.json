@@ -17,7 +17,7 @@
     "dev_utt2index": "data_reader/utt2systemID/pa_dev_utt2index_8", 
     "dev_utt2systemID": "data_reader/utt2systemID/pa_dev_utt2systemID", 
     "eval_utt2systemID": "data_reader/utt2systemID/pa_eval_utt2systemID", 
-    "scoring_dir": "scoring/tasks_scores/", 
+    "scoring_dir": "scoring/pa_spec_dev/", 
     "train_scp": "/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/ASVspoof2019_PA_train_spec/feats.scp", 
     "train_utt2index": "data_reader/utt2systemID/pa_train_utt2index_8"
   }, 
@@ -43,7 +43,7 @@
   "n_warmup_steps": 1000, 
   "pretrained": null, 
   "pretrained_model_id": 18, 
-  "seed": 868462427, 
+  "seed": 92039317, 
   "start_epoch": 1, 
   "test_batch_size": 1
 }

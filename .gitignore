@@ -105,3 +105,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# snapshots
+assert_src/snapshots
+*assert_src/snapshots/_sources
