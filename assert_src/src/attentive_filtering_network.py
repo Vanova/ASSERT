@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from resnet import SpoofResNet257_400, SpoofResNet257_500, SpoofSmallResNet257_400, SpoofSmallResNet256_400
+from src.resnet import SpoofResNet257_400, SpoofResNet257_500, SpoofSmallResNet257_400, SpoofSmallResNet256_400
 
 # PyTorch implementation of Attentive Filtering Network
 

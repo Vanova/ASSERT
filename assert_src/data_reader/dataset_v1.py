@@ -1,6 +1,6 @@
 import numpy as np
 from torch.utils import data
-from kaldi_io import read_mat
+from data_reader.kaldi_io import read_mat
 import h5py
 
 
