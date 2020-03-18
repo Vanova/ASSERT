@@ -37,7 +37,7 @@ ex.observers.append(FileStorageObserver.create('snapshots'))
 def my_config():
     model_params = {
         'MODEL_SELECT': 6,  # which model
-        'NUM_SPOOF_CLASS': 2, #2,  # LA: 7 or PA: 10 x-class classification
+        'NUM_SPOOF_CLASS': 2,  # 2,  # LA: 7 or PA: 10 x-class classification
         'FOCAL_GAMMA': None,  # gamma parameter for focal loss; if obj is not focal loss, set this to None
         'NUM_RESNET_BLOCK': 5,  # number of resnet blocks in ResNet
         'AFN_UPSAMPLE': 'Bilinear',  # upsampling method in AFNet: Conv or Bilinear
@@ -58,10 +58,10 @@ def my_config():
         # 'dev_utt2index': 'data_reader/utt2systemID/pa_dev_utt2index_8',
         # 'dev_utt2systemID': 'data_reader/utt2systemID/pa_dev_utt2systemID',
 
-	# I2R users dataset
-        'train_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/tasks_spec_cm/feats.scp', # VAD
+        # I2R users dataset
+        'train_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/tasks_spec_cm/feats.scp',  # VAD
         'train_utt2index': 'data_reader/utt2systemID/tasks_utt2index_8',
-         
+
         'dev_scp': '/home/vano/wrkdir/projects/antispoofing_speech/kaldi_feats/data/tasks_spec_cm/feats.scp',
         'dev_utt2index': 'data_reader/utt2systemID/tasks_utt2index_8',
         'dev_utt2systemID': 'data_reader/utt2systemID/tasks_utt2systemID',
@@ -72,14 +72,14 @@ def my_config():
 
     leave_one_out = False  # leave one out during train and val
     eer_criteria = True  # train by dev acc or eer
-    batch_size = 64 #64
-    test_batch_size = 1 # 64
+    batch_size = 64  # 64
+    test_batch_size = 1  # 64
     epochs = 5  # 20 for PA, 10 for LA
     start_epoch = 1
     n_warmup_steps = 1000
     log_interval = 100
-    pretrained = '../pretrained/pa/senet34_py3_state_dict' # None
-    pretrained_model_id = 18 # PA 18 # LA 20  # for forward pass
+    pretrained = '../pretrained/pa/senet34_py3'  # None
+    pretrained_model_id = 18  # PA 18 # LA 20  # for forward pass
     class_labels = [  # for post analysis
         'bonafide', 'AB', 'AC',
         'BA', 'BB', 'BC', 'CA', 'CB', 'CC', 'AA',
@@ -145,10 +145,11 @@ def work(_run, pretrained, batch_size, test_batch_size, epochs, start_epoch, log
             print("===> loading checkpoint '{}'".format(pretrained))
             checkpoint = torch.load(pretrained)
             start_epoch = checkpoint['epoch']
-            if eer_criteria:
+            if eer_criteria and 'best_eer' in checkpoint:
                 best_eer = checkpoint['best_eer']
             else:
                 best_acc1 = checkpoint['best_acc1']
+                print("===> Best accuracy: %f" % best_acc1)
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             print("===> loaded checkpoint '{}' (epoch {})"
@@ -319,16 +320,16 @@ def forward_pass(_run, pretrained_model_id, test_batch_size, data_files, model_p
     print('===> Model total parameter: {}'.format(num_params))
 
     if pretrained_model_id:
-        #pretrain_pth = 'snapshots/' + str(pretrained_model_id) + '/model_best.pth.tar'
+        # pretrain_pth = 'snapshots/' + str(pretrained_model_id) + '/model_best.pth.tar'
         pretrain_pth = '../pretrained/pa/senet34_py3'
         if os.path.isfile(pretrain_pth):
             print("===> loading checkpoint '{}'".format(pretrain_pth))
             # python 2
-            # checkpoint = torch.load(pretrain_pth, map_location=lambda storage, loc: storage)  # load for cpu            
-            # model.load_state_dict(checkpoint['state_dict'], strict=False)
+            checkpoint = torch.load(pretrain_pth, map_location=lambda storage, loc: storage)  # load for cpu
+            model.load_state_dict(checkpoint['state_dict'], strict=False)
             # python 3
-            checkpoint = torch.load(pretrain_pth)
-            model.load_state_dict(checkpoint, strict=False)            
+            # checkpoint = torch.load(pretrain_pth)
+            # model.load_state_dict(checkpoint, strict=False)
             print("===> loaded checkpoint '{}'"
                   .format(pretrain_pth))
         else:
@@ -381,7 +382,6 @@ def train(train_loader, model, optimizer, epoch, device, log_interval, rnn, foca
         target = torch.stack(target)
         target = target.reshape(-1)
         target = target.to(device).view((-1,))
-        
 
         # compute output
         if rnn:
@@ -516,20 +516,21 @@ def prediction(val_loader, model, device, output_file, utt2systemID_file, rnn, f
     with torch.no_grad():
         for i, (utt_list, input, target) in enumerate(val_loader):
             input = input[0].to(device)
-            #target = target.to(device).view((-1,))
+            # target = target.to(device).view((-1,))
             print(i, utt_list)
 
             # compute output
             if rnn:
                 hidden = model.init_hidden(input.size(0))
                 output = model(input, hidden)
-            else:                
+            else:
                 output = model(input)
 
             # get score 
             if focal_obj:
                 output = F.log_softmax(output, dim=-1)  # apply softmax if model trained with focal loss
-            score = 1. - 1. / (1. + np.exp(-output[:, 0])) # output[:, 0]  # use log-probability of the bonafide class for scoring
+            score = 1. - 1. / (1. + np.exp(
+                -output[:, 0]))  # output[:, 0]  # use log-probability of the bonafide class for scoring
 
             for index, utt_id in enumerate(utt_list):
                 # curr_utt = ''.join(utt_id.split('-')[0] + '-' + utt_id.split('-')[1])
@@ -541,11 +542,11 @@ def prediction(val_loader, model, device, output_file, utt2systemID_file, rnn, f
         utt_list = [x.split()[0] for x in content]
         id_list = [x.split()[1] for x in content]
 
-        #os.mkdir(os.path.split(output_file)[0], True)
+        # os.mkdir(os.path.split(output_file)[0], True)
         with open(output_file, 'w') as f:
             for index, utt_id in enumerate(utt_list):
                 score_list = utt2scores[utt_id]
-                avg_score = np.mean(score_list) # reduce(lambda x, y: x + y, score_list) / len(score_list)
+                avg_score = np.mean(score_list)  # reduce(lambda x, y: x + y, score_list) / len(score_list)
                 spoof_id = id_list[index]
                 if spoof_id == 'bonafide':
                     f.write('%s %s %s %f\n' % (utt_id, '-', 'bonafide', avg_score))
@@ -731,4 +732,4 @@ class ScheduledOptim(object):
 def main():
     work()
     # post()
-    #forward_pass()
+    # forward_pass()

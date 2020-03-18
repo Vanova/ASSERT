@@ -43,26 +43,7 @@ if py3:
     for mf in model_files:
         # Load the pickle file in Python 3.X
         with open(mf + '_py2.pkl', 'rb') as f:
-            data_dict = pickle.load(f, encoding='bytes')
-
-        # View the keys, this prints bytes.
-        print(data_dict.keys())
-
-        # Turn OrderedDict to normal dict.
-        data_dict = dict(data_dict)
-
-        # Convert the first level keys.
-        data_dict = dict((key.decode(), value) for (key, value) in data_dict.items())
-
-        # This should print strings
-        print(data_dict.keys())
-
-        # Convert the second level 'state_dict' keys.
-        data_dict['state_dict'] = dict(data_dict['state_dict'])
-        data_dict['state_dict'] = dict((key.decode(), value) for (key, value) in data_dict['state_dict'].items())
-
-        # This should print strings
-        print(data_dict['state_dict'].keys())
+            data_dict = pickle.load(f, encoding='latin-1')
 
         path, name = os.path.split(mf)
         torch.save(data_dict, "{}/{}_py3".format(path, 'senet34'))

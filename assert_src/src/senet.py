@@ -185,9 +185,6 @@ class ResNet(nn.Module):
         self.focal_loss = focal_loss 
 
         super(ResNet, self).__init__()
-        # TODO normalize 
-        self.bn0 = nn.BatchNorm2d(257)
-        ##
         self.conv1 = nn.Conv2d(1, 16, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(16)
         self.relu = nn.ReLU(inplace=True)
