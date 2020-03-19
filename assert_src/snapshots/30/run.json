@@ -1,0 +1,136 @@
+{
+  "artifacts": [],
+  "command": "main",
+  "experiment": {
+    "base_dir": "/home/vano/wrkdir/projects/antispoofing_speech/ASSERT/assert_src",
+    "dependencies": [
+      "numpy==1.17.1",
+      "sacred==0.8.1",
+      "torch==1.0.0",
+      "torchvision==0.2.1"
+    ],
+    "mainfile": "main.py",
+    "name": "asvspoof19",
+    "repositories": [
+      {
+        "commit": "c974b93475ee521a216a4d4d51b666a0d4c20462",
+        "dirty": true,
+        "url": "git@github.com:Vanova/ASSERT.git"
+      },
+      {
+        "commit": "c974b93475ee521a216a4d4d51b666a0d4c20462",
+        "dirty": true,
+        "url": "git@github.com:Vanova/ASSERT.git"
+      },
+      {
+        "commit": "c974b93475ee521a216a4d4d51b666a0d4c20462",
+        "dirty": true,
+        "url": "git@github.com:Vanova/ASSERT.git"
+      },
+      {
+        "commit": "c974b93475ee521a216a4d4d51b666a0d4c20462",
+        "dirty": true,
+        "url": "git@github.com:Vanova/ASSERT.git"
+      },
+      {
+        "commit": "c974b93475ee521a216a4d4d51b666a0d4c20462",
+        "dirty": true,
+        "url": "git@github.com:Vanova/ASSERT.git"
+      },
+      {
+        "commit": "c974b93475ee521a216a4d4d51b666a0d4c20462",
+        "dirty": true,
+        "url": "git@github.com:Vanova/ASSERT.git"
+      },
+      {
+        "commit": "c974b93475ee521a216a4d4d51b666a0d4c20462",
+        "dirty": true,
+        "url": "git@github.com:Vanova/ASSERT.git"
+      }
+    ],
+    "sources": [
+      [
+        "data_reader/__init__.py",
+        "_sources/__init___d41d8cd98f00b204e9800998ecf8427e.py"
+      ],
+      [
+        "data_reader/dataset_v1.py",
+        "_sources/dataset_v1_0f5d9a2807011579b94b10ee61294b9b.py"
+      ],
+      [
+        "main.py",
+        "_sources/main_c9004f1660816ac09a84b5024c848a3a.py"
+      ],
+      [
+        "model.py",
+        "_sources/model_2509c36ba13c6d420628d5af8ae8628a.py"
+      ],
+      [
+        "src/__init__.py",
+        "_sources/__init___d41d8cd98f00b204e9800998ecf8427e.py"
+      ],
+      [
+        "src/eval_metrics.py",
+        "_sources/eval_metrics_5b88bcc5ff392d2ab6f19722e6a3d582.py"
+      ],
+      [
+        "src/loss.py",
+        "_sources/loss_5a3bb07eca102985efd8e5a00bcc8850.py"
+      ]
+    ]
+  },
+  "heartbeat": "2020-03-18T14:25:13.394017",
+  "host": {
+    "ENV": {},
+    "cpu": "Intel(R) Xeon(R) CPU           E5540  @ 2.53GHz",
+    "gpus": {
+      "driver_version": "375.39",
+      "gpus": [
+        {
+          "model": "GeForce GTX TITAN",
+          "persistence_mode": false,
+          "total_memory": 6081
+        }
+      ]
+    },
+    "hostname": "sggpu",
+    "os": [
+      "Linux",
+      "Linux-4.4.0-31-generic-x86_64-with-debian-jessie-sid"
+    ],
+    "python_version": "3.5.5"
+  },
+  "meta": {
+    "command": "main",
+    "options": {
+      "--beat-interval": null,
+      "--capture": null,
+      "--comment": null,
+      "--debug": false,
+      "--enforce_clean": false,
+      "--file_storage": null,
+      "--force": false,
+      "--help": false,
+      "--loglevel": null,
+      "--mongo_db": null,
+      "--name": null,
+      "--pdb": false,
+      "--print-config": false,
+      "--priority": null,
+      "--queue": false,
+      "--s3": null,
+      "--sql": null,
+      "--tiny_db": null,
+      "--unobserved": false,
+      "COMMAND": null,
+      "UPDATE": [],
+      "help": false,
+      "with": false
+    }
+  },
+  "resources": [],
+  "result": null,
+  "start_time": "2020-03-18T14:22:03.745318",
+  "status": "COMPLETED",
+  "stop_time": "2020-03-18T14:25:13.389916"
+}

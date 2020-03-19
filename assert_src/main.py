@@ -74,12 +74,12 @@ def my_config():
     eer_criteria = True  # train by dev acc or eer
     batch_size = 64  # 64
     test_batch_size = 1  # 64
-    epochs = 5  # 20 for PA, 10 for LA
+    epochs = 10  # 20 for PA, 10 for LA
     start_epoch = 1
     n_warmup_steps = 1000
     log_interval = 100
     pretrained = '../pretrained/pa/senet34_py3'  # None
-    pretrained_model_id = 18  # PA 18 # LA 20  # for forward pass
+    pretrained_model_id = 30 #18  # PA: 18, PA_tune: 30 # LA: 20  # for forward pass
     class_labels = [  # for post analysis
         'bonafide', 'AB', 'AC',
         'BA', 'BB', 'BC', 'CA', 'CB', 'CC', 'AA',
@@ -320,8 +320,8 @@ def forward_pass(_run, pretrained_model_id, test_batch_size, data_files, model_p
     print('===> Model total parameter: {}'.format(num_params))
 
     if pretrained_model_id:
-        # pretrain_pth = 'snapshots/' + str(pretrained_model_id) + '/model_best.pth.tar'
-        pretrain_pth = '../pretrained/pa/senet34_py3'
+        pretrain_pth = 'snapshots/' + str(pretrained_model_id) + '/model_best.pth.tar'
+        #pretrain_pth = '../pretrained/pa/senet34_py3'
         if os.path.isfile(pretrain_pth):
             print("===> loading checkpoint '{}'".format(pretrain_pth))
             # python 2
@@ -459,7 +459,8 @@ def validate(val_loader, utt2systemID_file, model, device, log_interval, rnn, ee
 
             # for model selection criteria == dev_eer only 
             if eer:
-                score = output[:, 0]  # use log-probability of the bonafide class for scoring
+                output = output.cpu().numpy()
+                score =  1. - 1. / (1. + np.exp(-output[:, 0])) #output[:, 0]  # use log-probability of the bonafide class for scoring
                 for index, utt_id in enumerate(utt_list):
                     utt2scores[utt_id[0]].append(score[index].item())
 
@@ -517,7 +518,7 @@ def prediction(val_loader, model, device, output_file, utt2systemID_file, rnn, f
         for i, (utt_list, input, target) in enumerate(val_loader):
             input = input[0].to(device)
             # target = target.to(device).view((-1,))
-            print(i, utt_list)
+            # print(i, utt_list)
 
             # compute output
             if rnn:
@@ -529,8 +530,8 @@ def prediction(val_loader, model, device, output_file, utt2systemID_file, rnn, f
             # get score 
             if focal_obj:
                 output = F.log_softmax(output, dim=-1)  # apply softmax if model trained with focal loss
-            score = 1. - 1. / (1. + np.exp(
-                -output[:, 0]))  # output[:, 0]  # use log-probability of the bonafide class for scoring
+            output = output.cpu().numpy()
+            score = 1. - 1. / (1. + np.exp(-output[:, 0])) # output[:, 0] #1. - 1. / (1. + np.exp(-output[:, 0]))  # output[:, 0]  # use log-probability of the bonafide class for scoring
 
             for index, utt_id in enumerate(utt_list):
                 # curr_utt = ''.join(utt_id.split('-')[0] + '-' + utt_id.split('-')[1])
@@ -730,6 +731,6 @@ class ScheduledOptim(object):
 
 @ex.automain
 def main():
-    work()
+    #work()
     # post()
-    # forward_pass()
+    forward_pass()
